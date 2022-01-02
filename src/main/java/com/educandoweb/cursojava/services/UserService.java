@@ -2,8 +2,12 @@ package com.educandoweb.cursojava.services;
 
 import com.educandoweb.cursojava.entities.User;
 import com.educandoweb.cursojava.repositories.UserRepository;
+import com.educandoweb.cursojava.services.exceptions.DatabaseException;
 import com.educandoweb.cursojava.services.exceptions.ResourceNotFoundException;
+import com.sun.xml.bind.v2.model.annotation.RuntimeInlineAnnotationReader;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,7 +33,14 @@ public class UserService {
     }
 
     public void delete(Long id) {
-        userRepository.deleteById(id);
+        try {
+            userRepository.deleteById(id);
+            // Erro mais genérico: RuntimeInlineAnnotationReader
+        } catch (EmptyResultDataAccessException e) {
+            throw new ResourceNotFoundException(id);
+        } catch (DataIntegrityViolationException e){ // Erro de violacao de intefridade de banco de dados.
+            throw new DatabaseException(e.getMessage());
+        }
     }
 
     public User update(Long id, User obj) {
