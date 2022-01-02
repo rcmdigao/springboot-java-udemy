@@ -10,6 +10,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,15 +39,20 @@ public class UserService {
             // Erro mais genérico: RuntimeInlineAnnotationReader
         } catch (EmptyResultDataAccessException e) {
             throw new ResourceNotFoundException(id);
-        } catch (DataIntegrityViolationException e){ // Erro de violacao de intefridade de banco de dados.
+        } catch (DataIntegrityViolationException e) { // Erro de violacao de intefridade de banco de dados.
             throw new DatabaseException(e.getMessage());
         }
     }
 
     public User update(Long id, User obj) {
-        User entity = userRepository.getOne(id); // getOne: Prepara o objeto monitorado e depois ele efetua a operacao no BD
-        updateData(entity, obj);
-        return userRepository.save(entity);
+        try {
+            User entity = userRepository.getOne(id); // getOne: Prepara o objeto monitorado e depois ele efetua a operacao no BD
+            updateData(entity, obj);
+            return userRepository.save(entity);
+        } catch (EntityNotFoundException e) {
+            throw new ResourceNotFoundException(e.getMessage());
+        }
+
     }
 
     private void updateData(User entity, User obj) {
